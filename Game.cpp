@@ -39,6 +39,9 @@ particleeffect
 
 should consider making polygon, square and circle objects that can calculate overlaps with eachother
 
+
+The other thing I would like to do is switch over to using pure C++, rather than a combo of C and C++
+
 */
 
 
@@ -96,11 +99,12 @@ void startProgram(){
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	collisions = (Collision**)malloc(sizeof(Collision*)*MAX_NUM_COLLISIONS);
+	collisions = new Collision*[MAX_NUM_COLLISIONS];
+	
+//	collisions = (Collision**)malloc(sizeof(Collision*)*MAX_NUM_COLLISIONS);
 	int i;
-	for(i = 0; i < MAX_NUM_COLLISIONS; i++){
-		collisions[i] = NULL;
-	}
+	for(i = 0; i < MAX_NUM_COLLISIONS; i++) collisions[i] = NULL;
+
 	
 	loadMenus();
 	
@@ -577,7 +581,9 @@ void endProgram(){
 	for(i = 0; i < numCollisions; i++){
 		delete collisions[i];
 	}
-	free(collisions);
+//	free(collisions);
+	delete[] collisions;
+
 	delete edges[0];
 	delete edges[1];
 	delete edges[2];

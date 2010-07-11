@@ -10,7 +10,6 @@ of the tutorial code by Ti Leggett
 #define INCLUDED_FONT_H
 
 #include "SDL/SDL_opengl.h"
-#include "GL/glx.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>

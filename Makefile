@@ -1,14 +1,18 @@
 options =  -Wall -g -ggdb
 link = `sdl-config --libs` -lGLU -lSDL_image -lSDL_ttf
 
-OBJ_FILES = Timer.o GLWindow.o Texture.o Log.o Game.o LevelData.o Ball.o Block.o StaticObject.o DynamicObject.o TexturedObject.o Paddle.o Particle.o LevelList.o GraphicFont.o GUIObject.o Menu.o Button.o CountdownMenu.o Collision.o
+OBJ_FILES = Timer.o GLWindow.o Texture.o Log.o Game.o LevelData.o Ball.o Block.o StaticObject.o DynamicObject.o TexturedObject.o Paddle.o Particle.o LevelList.o GUIObject.o Menu.o Button.o CountdownMenu.o Collision.o
 
-compile: ${OBJ_FILES}
-	g++ ${options} -o main ${OBJ_FILES} ${link}
-run: compile
+linux: ${OBJ_FILES} GraphicFontLinux.o
+	g++ ${options} -o main ${OBJ_FILES} GraphicFontLinux.o ${link}
+
+windows: ${OBJ_FILES} GraphicFontWindows.o
+	g++ ${options} -o main ${OBJ_FILES} GraphicFontWindows.o ${link}
+run:
 	./main
 clean: 
 	rm *.o
+	rm main
 #	rm -f ${OBJ_FILES}
 Game.o: Game.cpp Game.h 
 	g++ ${options} -c Game.cpp	
@@ -20,8 +24,12 @@ Texture.o: Texture.cpp Texture.h
 	g++ ${options} -c Texture.cpp
 Log.o: Log.cpp Log.h
 	g++ ${options} -c Log.cpp
-GraphicFont.o: GraphicFont.cpp GraphicFont.h
-	g++ ${options} -c GraphicFont.cpp
+	
+GraphicFontWindows.o: GraphicFontWindows.cpp GraphicFont.h
+	g++ ${options} -c GraphicFontWindows.cpp
+GraphicFontLinux.o: GraphicFontLinux.cpp GraphicFont.h
+	g++ ${options} -c GraphicFontLinux.cpp
+	
 LevelData.o: LevelData.cpp LevelData.h Block.o
 	g++ ${options} -c LevelData.cpp
 LevelList.o: LevelList.cpp LevelList.h LevelData.o

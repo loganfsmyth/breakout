@@ -6,6 +6,8 @@ See GraphicFont.h for information
 
 #include "GraphicFont.h"
 
+#include "GL/glx.h"
+
 GraphicFont::GraphicFont(int size, int type){
 	started = false;
 	fontSize = size;
