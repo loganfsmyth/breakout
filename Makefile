@@ -1,7 +1,7 @@
 options =  -Wall -g -ggdb
 link = `sdl-config --libs` -lGLU -lSDL_image -lSDL_ttf
 
-OBJ_FILES = Main.o Timer.o Window.o Texture.o Log.o Game.o Level.o Ball.o Block.o Rect.o
+OBJ_FILES = Main.o Timer.o Window.o Texture.o Log.o Game.o Level.o Ball.o Block.o Rect.o StaticObject.o DynamicObject.o
 
 
 compile: ${OBJ_FILES}
@@ -24,9 +24,13 @@ Log.o: Log.cpp Log.h
 	g++ ${options} -c Log.cpp
 Level.o: Level.cpp Level.h
 	g++ ${options} -c Level.cpp
-Ball.o: Ball.cpp Ball.h
+Ball.o: Ball.cpp Ball.h DynamicObject.o
 	g++ ${options} -c Ball.cpp
 Block.o: Block.cpp Block.h
 	g++ ${options} -c Block.cpp
-Rect.o: Rect.cpp Rect.h
+Rect.o: StaticObject.o Rect.cpp Rect.h 
 	g++ ${options} -c Rect.cpp
+StaticObject.o: StaticObject.cpp StaticObject.h
+	g++ ${options} -c StaticObject.cpp
+DynamicObject.o: DynamicObject.cpp DynamicObject.h
+	g++ ${options} -c DynamicObject.cpp

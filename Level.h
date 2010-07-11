@@ -26,7 +26,6 @@ class Level{
 		int valueAt(int x, int y);
 		void display();
 		void render();
-		int checkForCollision(Ball* ball, int* xShift, int* yShift);
 		
 		void setBlockTexture(GLuint tex);
 		void setParticleTexture(GLuint tex);

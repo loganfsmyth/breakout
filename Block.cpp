@@ -10,13 +10,8 @@ GLfloat Block::allColors[6][3] = {
 	{1.0f,0,0}			//red
 };
 
-Block::Block(int type, int x, int y, int w, int h){
+Block::Block(int type, int x, int y, int w, int h):StaticObject(x,y,w,h){
 	this->type = type;
-	this->x = x;
-	this->y = y;
-	this->w = w;
-	this->h = h;
-	
 	textured = false;
 }
 
@@ -42,19 +37,6 @@ void Block::render(){
 		if(textured) glTexCoord2f(0.6,0.4);
 	glEnd();
 }
-
-int Block::getX(){
-	return x;
-}
-int Block::getY(){
-	return y;
-}
-int Block::getW(){
-	return w;
-}
-int Block::getH(){
-	return h;
-}
 int Block::getType(){
 	return type;
 }
@@ -66,8 +48,4 @@ void Block::reduceCount(){
 	if(type < 0){
 		type = BLOCK_HIDDEN;
 	}
-}
-
-Rect* Block::getRect(){
-	return new Rect(x,y,w,h);
 }

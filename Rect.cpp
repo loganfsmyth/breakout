@@ -1,6 +1,6 @@
 #include "Rect.h"
 
-Rect::Rect(int x,int y,int w,int h){
+Rect::Rect(double x,double y,double w,double h){
 	this->x = x;
 	this->y = y;
 	this->w = w;
@@ -8,10 +8,10 @@ Rect::Rect(int x,int y,int w,int h){
 }
 bool Rect::contains(Rect* rect){
 	
-	int rx = rect->getX();
-	int ry = rect->getY();
-	int rw = rect->getW();
-	int rh = rect->getH();
+	double rx = rect->getX();
+	double ry = rect->getY();
+	double rw = rect->getW();
+	double rh = rect->getH();
 	
 	if(containsPoint(rx, ry)) return true;
 	else if(containsPoint(rx+rw, ry)) return true;
@@ -23,7 +23,7 @@ bool Rect::contains(Rect* rect){
 	else if(rect->containsPoint(x+w, y+h)) return true;
 	else return false;
 }
-bool Rect::containsPoint(int px,int py){
+bool Rect::containsPoint(double px,double py){
 	if((px > x) && (px < x+w) && (py > y) && (py < y+h)){
 		return true;
 	}
@@ -55,43 +55,36 @@ bool Rect::nwOverlap(Rect* rect){
 	return (rect->containsPoint(x,y));
 }
 
-int Rect::getNOverlap(Rect* rect){
+double Rect::getNOverlap(Rect* rect){
 	return (rect->getY()+rect->getH()-y);
 }
-int Rect::getSOverlap(Rect* rect){
+double Rect::getSOverlap(Rect* rect){
 	return rect->getY()-(y+h);
 }
-int Rect::getEOverlap(Rect* rect){
+double Rect::getEOverlap(Rect* rect){
 	return rect->getX()-(x+w);
 }
-int Rect::getWOverlap(Rect* rect){
+double Rect::getWOverlap(Rect* rect){
 	return (rect->getX()+rect->getW())-x;
 }
 
 
-int Rect::getX(){
+double Rect::getX(){
 	return x;
 }
-int Rect::getY(){
+double Rect::getY(){
 	return y;
 }
-int Rect::getW(){
+double Rect::getW(){
 	return w;
 }
-int Rect::getH(){
+double Rect::getH(){
 	return h;
 }
 void Rect::display(){
 //	printf("Rect: (%i,%i) W:%i H:%i\n", x, y, w,h);
-	printf("(%i,%i)   (%i,%i)\n", x, y, x+w, y);
-	printf("(%i,%i)   (%i,%i)\n", x, y+h, x+w, y+h);
+	printf("(%f,%f)   (%f,%f)\n", x, y, x+w, y);
+	printf("(%f,%f)   (%f,%f)\n", x, y+h, x+w, y+h);
 	
 }
 
-int Rect::getBounceDirections(Rect* rectArr, int numRects, int direction, int* xShift, int* yShift){
-	
-	
-	
-	
-	
-}

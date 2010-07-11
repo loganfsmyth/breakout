@@ -50,8 +50,6 @@ bool Window::initializeGL(int width, int height){
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	
-//	glShadeModel(GL_SMOOTH);
-	
 	glViewport( 0, 0, ( GLint )width, ( GLint )height );
 	
 	if( glGetError() != GL_NO_ERROR ) return false;

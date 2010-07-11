@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "Rect.h"
+#include "StaticObject.h"
 
 #define BLOCK_PURPLE		0
 #define BLOCK_BLUE		1
@@ -17,26 +18,19 @@
 #define BLOCK_IMAGE_BORDER	2
 
 
-class Block{
+class Block: public StaticObject{
 	private:
 		int type;
-		int x,y,w,h;
 		static GLfloat allColors[6][3];
 		bool textured;
 	public:
-		Block(int type, int x, int y, int w, int h);
+		Block(int type, int x, int y, int w, int h);// : StaticObject(x,y,w,h);
 		void update();
 		void render();
-		int getX();
-		int getY();
-		int getW();
-		int getH();
 		int getType();
 	
 		void enableTexture();
 		void disableTexture();
-	
-		Rect* getRect();
 	
 		void reduceCount();
 };

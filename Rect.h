@@ -12,15 +12,15 @@
 class Rect{
 	
 	private:
-		int x, y, w, h;
+		double x, y, w, h;
 	public:
-		Rect(int x,int y,int w,int h);
+		Rect(double x,double ,double w,double h);
 		bool contains(Rect* rect);
-		bool containsPoint(int px,int py);
-		int getX();
-		int getY();
-		int getW();
-		int getH();
+		bool containsPoint(double px,double py);
+		double getX();
+		double getY();
+		double getW();
+		double getH();
 	
 	
 		//does the specified location in "this" overlap rect 
@@ -33,10 +33,10 @@ class Rect{
 		bool wOverlap(Rect* rect);
 		bool nwOverlap(Rect* rect);
 	
-		int getNOverlap(Rect* rect);
-		int getSOverlap(Rect* rect);
-		int getEOverlap(Rect* rect);
-		int getWOverlap(Rect* rect);
+		double getNOverlap(Rect* rect);
+		double getSOverlap(Rect* rect);
+		double getEOverlap(Rect* rect);
+		double getWOverlap(Rect* rect);
 	
 		void display();
 };

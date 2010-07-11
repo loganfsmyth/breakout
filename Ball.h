@@ -7,45 +7,26 @@
 #include "Timer.h"
 #include "time.h"
 #include "Rect.h"
+#include "DynamicObject.h"
+
 
 #define BALL_BORDER	0	//border to account for transparent pixels in texture
 #define BALL_RADIUS	6
 
-class Ball{
+#define BALL_START_VELOCITY	0.2
+
+class Ball: public DynamicObject{
 	
 	private:
-		int x;
-		int y;
-	
-		float xVel;
-		float yVel;
-		Timer* timer;
 		bool textured;
 		
 	public:
 		
-		Ball(int x, int y);
-		void move();
+		Ball(double x, double y);
 		void render();
-		void invertXVel();
-		void invertYVel();
 	
-		int getX();
-		int getY();
-		int getR();
-		void setX(int x);
-		void setY(int y);
-		Rect* getRect();
-		
 		void enableTexture();
 		void disableTexture();
-	
-		bool movingNW();
-		bool movingSW();
-		bool movingNE();
-		bool movingSE();
-		
-		~Ball();
 		
 };
 

@@ -121,9 +121,11 @@ void Game::processGameLogic(){
 //	printf("_______________________\n");
 	
 	if(currentBall != NULL){
+		
+//		Rect* ballRect = currentBall->getRect();
+		
 /*		
-		Rect* winRect = new Rect(0,0, HORIZ_RES, VERT_RES);
-		Rect* ballRect = currentBall->getRect();
+		Rect* winRect = new Rect(0.0,0.0, (double)HORIZ_RES, (double)VERT_RES);
 		
 		if(!ballRect->nOverlap(winRect) || !ballRect->sOverlap(winRect)){
 			reflectY = true;
@@ -134,45 +136,42 @@ void Game::processGameLogic(){
 		delete winRect;
 */
 		
-		int position = currentBall->getX();
-		int radius = currentBall->getR();
-		if(position+radius > HORIZ_RES){
+		if(currentBall->getX()+currentBall->getW() > HORIZ_RES){
 			reflectX = true;
-			currentBall->setX(HORIZ_RES-radius);
+			currentBall->shiftX(currentBall->getX()-HORIZ_RES);
 		}
-		else if(position-radius < 0){
+		else if(currentBall->getX() < 0){
 			reflectX = true;
-			currentBall->setX(radius);
+			currentBall->shiftX(-1*currentBall->getX());
 		}
 		
-		position = currentBall->getY();
-		if(position+radius > VERT_RES){
+		if(currentBall->getY()+currentBall->getH() > VERT_RES){
 			reflectY = true;
-			currentBall->setY(VERT_RES-radius);
+			currentBall->shiftY(currentBall->getY()-VERT_RES);
 		}
-		else if(position-radius < 0){
+		else if(currentBall->getY() < 0){
 			reflectY = true;
-			currentBall->setY(radius);
+			currentBall->shiftY(-1*currentBall->getY());
 		}
 		
 		int xShift = 0, yShift = 0;
-		
+/*
 		if(currentLevel != NULL){
-			int collision = currentLevel->checkForCollision(currentBall, &xShift, &yShift);
+//			int collision = currentLevel->checkForCollision(currentBall, &xShift, &yShift);
+			int collision = currentBall->checkForCollision(arrr, size);
 			if(!reflectX) reflectX = ((collision & X_AXIS) == X_AXIS);
 			if(!reflectY) reflectY = ((collision & Y_AXIS) == Y_AXIS);
 		}
-
+*/
 		
 		if(reflectX) currentBall->invertXVel();
 		if(reflectY) currentBall->invertYVel();
 		
-		currentBall->setX(currentBall->getX()+xShift);
-		currentBall->setY(currentBall->getY()+yShift);
+		currentBall->shiftX(xShift);
+		currentBall->shiftY(yShift);
 		
 		currentBall->move();
 	}
-	
 }
 
 void Game::renderGame(){
@@ -190,7 +189,7 @@ void Game::renderGame(){
 	}
 	else{
 		if(currentLevel == NULL){
-			currentBall = new Ball(397,500);
+			currentBall = new Ball(397.0,500.0);
 			currentBall->enableTexture();
 			
 			currentLevel = new Level();
