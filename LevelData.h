@@ -7,37 +7,32 @@
 #include <string.h>
 
 #include "Block.h"
-#include "Ball.h"
 
 #define BLOCK_HEIGHT_FACTOR	3/4
 #define BLOCK_NUM_SIG_FIGS	2
 
-#define X_AXIS	1
-#define Y_AXIS	2
 
-
-class Level{
+class LevelData{
 	public:
-		Level();
+		LevelData();
 		
 		bool open(char* filename);
-		int* getLayout(int* w, int* h);
 		void regenerateBlocks(int w, int h);
 		int valueAt(int x, int y);
 		void display();
 		void render();
+		Block** getBlocks(int* size = NULL);
+		void setBlockImpact(int* blocksHit, int numHit);
+		int getNumVisible();
 		
-		void setBlockTexture(GLuint tex);
-		void setParticleTexture(GLuint tex);
-		
-		~Level();
+		~LevelData();
 	private:
 		Block** blocks;
 		int* levelData;
 		int levelSize;
 		int levelWidth;
 		int levelHeight;
-	
+		int numVisible;
 		
 };
 

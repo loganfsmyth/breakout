@@ -12,40 +12,39 @@ GLfloat Block::allColors[6][3] = {
 
 Block::Block(int type, int x, int y, int w, int h):StaticObject(x,y,w,h){
 	this->type = type;
-	textured = false;
 }
 
-void Block::enableTexture(){
-	textured = true;
-}
-void Block::disableTexture(){
-	textured = false;
-}
 void Block::render(){
 	if(type == BLOCK_HIDDEN) return;
 	
+	glLoadIdentity();
 	glColor3fv(allColors[type]);
+	glTranslatef(x,y, 0);
 	
 	glBegin(GL_QUADS);
-		glVertex2f(x,y);
-		if(textured) glTexCoord2f(0.4,0.4);
-		glVertex2f(x, y+h);
-		if(textured) glTexCoord2f(0.4,0.6);
-		glVertex2f(x+w, y+h);
-		if(textured) glTexCoord2f(0.6,0.6);
-		glVertex2f(x+w, y);
-		if(textured) glTexCoord2f(0.6,0.4);
+		glVertex2f(0,0);
+		if(isTextured()) glTexCoord2f(0.4,0.4);
+		glVertex2f(0, h);
+		if(isTextured()) glTexCoord2f(0.4,0.6);
+		glVertex2f(w, h);
+		if(isTextured()) glTexCoord2f(0.6,0.6);
+		glVertex2f(w, 0);
+		if(isTextured()) glTexCoord2f(0.6,0.4);
 	glEnd();
 }
 int Block::getType(){
 	return type;
 }
-void Block::reduceCount(){
-	if(type == BLOCK_HIDDEN) return;
-	
+bool Block::reduceType(){
+	if(type == BLOCK_HIDDEN){
+		printf("BlocK: Reduce::This shouldn't happen\n");
+		return false;
+	}
 	type--;
 	
 	if(type < 0){
 		type = BLOCK_HIDDEN;
+		return true;
 	}
+	else return false;
 }

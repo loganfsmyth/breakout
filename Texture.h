@@ -1,3 +1,6 @@
+#ifndef INCLUDED_TEXTURE_H
+#define INCLUDED_TEXTURE_H
+
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "SDL/SDL_image.h"
@@ -25,4 +28,4 @@ class Texture{
 		int width,height;
 };
 
-
+#endif

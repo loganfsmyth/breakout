@@ -1,31 +1,29 @@
 #include "DynamicObject.h"
 
-DynamicObject::DynamicObject(double x, double y, double w, double h, double xVel, double yVel, double xAcc, double yAcc):StaticObject(x,y,w,h){
+DynamicObject::DynamicObject(double x, double y, double w, double h, double xVel, double yVel, double xAcc, double yAcc, double xVelMax, double yVelMax):StaticObject(x,y,w,h){
 	this->xAcc = xAcc;
 	this->yAcc = yAcc;
 	this->xVel = xVel;
 	this->yVel = yVel;
+	this->xVelMax = xVelMax;
+	this->yVelMax = yVelMax;
 	
-	createTimer();
-}
-DynamicObject::DynamicObject(double x, double y, double w, double h, double xVel, double yVel):StaticObject(x,y,w,h){
-	this->xAcc = 0;
-	this->yAcc = 0;
-	this->xVel = xVel;
-	this->yVel = yVel;
-	
-	createTimer();
-}
-void DynamicObject::createTimer(){
 	timer = new Timer();
 	bool stat = timer->init();
 	if(!stat) printf("Ball: Failed to Init TImer\n");
 }
+
 void DynamicObject::invertXVel(){
 	xVel *= -1;
 }
 void DynamicObject::invertYVel(){
 	yVel *= -1;
+}
+void DynamicObject::pause(){
+	timer->stop();
+}
+void DynamicObject::unpause(){
+	timer->start();
 }
 
 bool DynamicObject::movingNW(){
@@ -44,23 +42,27 @@ bool DynamicObject::movingSE(){
 	if(xVel > 0 && yVel > 0) return true;
 	else return false;
 }
-void DynamicObject::shiftX(double xShift){
-	x += xShift;
-}
-void DynamicObject::shiftY(double yShift){
-	y += yShift;
-}
 void DynamicObject::move(){
+	
+//	printf("XVel:%f  YVel:%f   XAcc:%f  YAcc:%f\n", xVel, yVel, xAcc, yAcc);
 	
 	if(!timer->isRunning()){
 		timer->start();
-		printf("Starting\n");
 	}
 	else{
 		int t = timer->getTime();
 		
 		xVel += xAcc*t;
 		yVel += yAcc*t;
+		
+		if(xVelMax != VELOCITY_UNLIMITED){
+			if(xVel > xVelMax) xVel = xVelMax;
+			else if(xVel < -1*xVelMax) xVel = -1*xVelMax;
+		}
+		if(yVelMax != VELOCITY_UNLIMITED){
+			if(yVel > yVelMax) yVel = yVelMax;
+			else if(yVel < -1*yVelMax) yVel = -1*yVelMax;
+		}
 		
 		x += xVel*t;
 		y += yVel*t;
@@ -69,292 +71,234 @@ void DynamicObject::move(){
 	}
 }
 
+double DynamicObject::abs(double i){
+	if(i < 0) return -1*i;
+	else return i;
+}
 
-int DynamicObject::checkForCollision(StaticObject* objects, int numObjects){
-	if(objects == NULL) return 0;
+int DynamicObject::checkForCollision(StaticObject** objects, int numObjects,double* xShift, double* yShift, int* objCollidedWith, int* numCollided){
+	if(objects == NULL || numObjects == 0) return 0;
 	
-	int i;
-//	double x, y, w, h, 
-	double bx, by, bw, bh;
-	
-	bx = ball->getX();
-	by = ball->getY();
-	bw = ball->getW();
-	bh = ball->getH();
-/*	
-	w = blocks[0]->getW();
-	h = blocks[0]->getH();
-	
-	
-	if(w < bw || h < bh){
-		printf("Level: This level was improperly designed\n       The Ball can't fit between blocks\n");
-		return 0;
-	}
-*/
-	
+	int i;	
 	int retVal = 0;
-	Rect* blockRect;
-	Rect* ballRect;
 	int hitNE = -1;
 	int hitSE = -1;
 	int hitNW = -1;
 	int hitSW = -1;
 	
-	ballRect = getRect();
-	
-	
 	//loop through the blocks and find any blocks that intercept a corner of the ball
 	//it can be assumed that a particular corner will not intersect more than 1 block
-	for(i = 0; i < levelSize; i++){
-		if(blocks[i]->getType() == BLOCK_HIDDEN) continue;
-
-		if(ballRect->nwOverlap(blockRect)) hitNW = i;
-		if(ballRect->swOverlap(blockRect)) hitSW = i;
-		if(ballRect->neOverlap(blockRect)) hitNE = i;
-		if(ballRect->seOverlap(blockRect)) hitSE = i;
-
-		delete blockRect;	//the rectangles are created at each call and must be freed
-		
+	for(i = 0; i < numObjects; i++){
+		if(objects[i] == this) continue;
+		if(nwOverlap(objects[i])) hitNW = i;
+		if(swOverlap(objects[i])) hitSW = i;
+		if(neOverlap(objects[i])) hitNE = i;
+		if(seOverlap(objects[i])) hitSE = i;
 	}
 	
 	
 	if(hitNE != -1 && hitSW != -1){		//if hit directly at intersection of 2 blocks
-		blocks[hitNE]->reduceCount();
-		blocks[hitSW]->reduceCount();
-	
-		Rect* swBlockRect = blocks[hitSW]->getRect();
-		Rect* neBlockRect = blocks[hitNE]->getRect();
 		
-		if(ball->movingSE()){
-			*xShift = ballRect->getEOverlap(neBlockRect);
-			*yShift = ballRect->getSOverlap(swBlockRect);
+		if(movingSE()){
+			if(xShift != NULL) *xShift = getEOverlap(objects[hitNE]);
+			if(yShift != NULL) *yShift = getSOverlap(objects[hitSW]);
 		}
-		else if(ball->movingNW()){
-			*xShift = ballRect->getWOverlap(swBlockRect);
-			*yShift = ballRect->getNOverlap(neBlockRect);
+		else if(movingNW()){
+			if(xShift != NULL) *xShift = getWOverlap(objects[hitSW]);
+			if(yShift != NULL) *yShift = getNOverlap(objects[hitNE]);
 		}
 		else{	//hope for the best
-			*xShift = 0;
-			*yShift = 0;
+			if(xShift != NULL) *xShift = 0;
+			if(yShift != NULL) *yShift = 0;
 		}
-		
-		delete swBlockRect;
-		delete neBlockRect;
-
 		retVal = (X_AXIS | Y_AXIS);
 	}
 	else if(hitNW != -1 && hitSE != -1){
-		blocks[hitSE]->reduceCount();
-		blocks[hitNW]->reduceCount();
-		
-		Rect* seBlockRect = blocks[hitSE]->getRect();
-		Rect* nwBlockRect = blocks[hitNW]->getRect();
-		
-		if(ball->movingSW()){
-			*xShift = ballRect->getWOverlap(nwBlockRect);
-			*yShift = ballRect->getSOverlap(seBlockRect);
+		if(movingSW()){
+			if(xShift != NULL) *xShift = getWOverlap(objects[hitNW]);
+			if(yShift != NULL) *yShift = getSOverlap(objects[hitSE]);
 		}
-		else if(ball->movingNE()){
-			*xShift = ballRect->getEOverlap(seBlockRect);
-			*yShift = ballRect->getNOverlap(nwBlockRect);
+		else if(movingNE()){
+			if(xShift != NULL) *xShift = getEOverlap(objects[hitSE]);
+			if(yShift != NULL) *yShift = getNOverlap(objects[hitNW]);
 		}
 		else{	//hope for the best
-			*xShift = 0;
-			*yShift = 0;
+			if(xShift != NULL) *xShift = 0;
+			if(yShift != NULL) *yShift = 0;
 		}
-		
-		delete seBlockRect;
-		delete nwBlockRect;
 		
 		retVal = (X_AXIS | Y_AXIS);
 	}
 	else if(hitNW != -1 && hitSW != -1){
-		blocks[hitSW]->reduceCount();
-		
-		blockRect = blocks[hitNW]->getRect();
-		if(hitSW != hitNW) blocks[hitNW]->reduceCount();
-		*xShift = ballRect->getWOverlap(blockRect);
-		delete blockRect;
+		if(xShift != NULL) *xShift = getWOverlap(objects[hitNW]);
 		retVal = X_AXIS;
 	}
 	else if(hitNW != -1 && hitNE != -1){
-		blocks[hitNW]->reduceCount();
-		blockRect = blocks[hitNW]->getRect();
-		if(hitNW != hitNE) blocks[hitNE]->reduceCount();
-		*yShift = ballRect->getNOverlap(blockRect);
-		delete blockRect;
+		if(yShift != NULL) *yShift = getNOverlap(objects[hitNW]);
 		retVal = Y_AXIS;
 	}
 	else if(hitSE != -1 && hitNE != -1){
-		blocks[hitSE]->reduceCount();
-		blockRect = blocks[hitSE]->getRect();
-		if(hitSE != hitNE) blocks[hitNE]->reduceCount();
-		*xShift = ballRect->getEOverlap(blockRect);
-		delete blockRect;
+		if(xShift != NULL) *xShift = getEOverlap(objects[hitNE]);
 		retVal = X_AXIS;
 	}
 	else if(hitSE != -1 && hitSW != -1){
-		blocks[hitSE]->reduceCount();
-		blockRect = blocks[hitSE]->getRect();
-		if(hitSE != hitSW) blocks[hitSW]->reduceCount();
-		*yShift = ballRect->getSOverlap(blockRect);
-		delete blockRect;
+		if(yShift != NULL) *yShift = getSOverlap(objects[hitSE]);
 		retVal = Y_AXIS;
 	}
 	else if(hitSE != -1){
-		blocks[hitSE]->reduceCount();
-		blockRect = blocks[hitSE]->getRect();
-		int x = ballRect->getEOverlap(blockRect);
-		int y = ballRect->getSOverlap(blockRect);
+		double x = getEOverlap(objects[hitSE]);
+		double y = getSOverlap(objects[hitSE]);
 
-		if(ball->movingSE()){
+		if(movingSE()){
 			
 			if(-1*x > -1*y){	//impact on south side of ball
 				retVal = Y_AXIS;
-				*yShift = y;
+				if(yShift != NULL) *yShift = y;
 			}
 			else if(-1*x < -1*y){	//impact on East side of ball
 				retVal = X_AXIS;
-				*xShift = x;
+				if(xShift != NULL) *xShift = x;
 			}
 			else{
 				retVal = X_AXIS | Y_AXIS;
-				*xShift = x;
-				*yShift = y;
+				if(xShift != NULL) *xShift = x;
+				if(yShift != NULL) *yShift = y;
 			}
 		}
-		else if(ball->movingSW()){
+		else if(movingSW()){
 			retVal = Y_AXIS;
-			*yShift = y;
+			if(yShift != NULL) *yShift = y;
 		}
-		else if(ball->movingNE()){
+		else if(movingNE()){
 			retVal = X_AXIS;
-			*xShift = x;
+			if(xShift != NULL) *xShift = x;
 		}
 		else{
 			printf("Level: Something wrong in SE\n");
 		}
-		
-		delete blockRect;
 	}
 	else if(hitSW != -1){
-		blocks[hitSW]->reduceCount();
 		
-		blockRect = blocks[hitSW]->getRect();
-
-		int x = ballRect->getWOverlap(blockRect);
-		int y = ballRect->getSOverlap(blockRect);
+		double x = getWOverlap(objects[hitSW]);
+		double y = getSOverlap(objects[hitSW]);
 		
-		if(ball->movingSW()){
+		if(movingSW()){
 			
 			if(x > -1*y){	//impact on south side of ball
 				retVal = Y_AXIS;
-				*yShift = y;
+				if(yShift != NULL) *yShift = y;
 			}
 			else if(x < -1*y){		//impact on west side of ball
 				retVal = X_AXIS;
-				*xShift = x;
+				if(xShift != NULL) *xShift = x;
 			}
 			else{
 				retVal = X_AXIS | Y_AXIS;
-				*xShift = x;
-				*yShift = y;
+				if(xShift != NULL) *xShift = x;
+				if(yShift != NULL) *yShift = y;
 			}
 		}
-		else if(ball->movingSE()){
+		else if(movingSE()){
 			retVal = Y_AXIS;
-			*yShift = y;
+			if(yShift != NULL) *yShift = y;
 		}
-		else if(ball->movingNW()){
+		else if(movingNW()){
 			retVal = X_AXIS;
-			*xShift = x;
+			if(xShift != NULL) *xShift = x;
 		}
 		else{
 			printf("Level: Something wrong in SW\n");
 		}
-		
-		delete blockRect;
-
 	}
 	else if(hitNE != -1){
-		blocks[hitNE]->reduceCount();
-	
-		blockRect = blocks[hitNE]->getRect();
-		int x = ballRect->getEOverlap(blockRect);
-		int y = ballRect->getNOverlap(blockRect);
+		double x = getEOverlap(objects[hitNE]);
+		double y = getNOverlap(objects[hitNE]);
 		
-		if(ball->movingNE()){
+		if(movingNE()){
 			
 			if(-1*x > y){	//impact on North side of ball
 				retVal = Y_AXIS;
-				*yShift = y;
+				if(yShift != NULL) *yShift = y;
 			}
 			else if(-1*x < y){	//impact on East side of ball
 				retVal = X_AXIS;
-				*xShift = x;
+				if(xShift != NULL) *xShift = x;
 			}
 			else{
 				retVal = X_AXIS | Y_AXIS;
-				*xShift = x;
-				*yShift = y;
+				if(xShift != NULL) *xShift = x;
+				if(yShift != NULL) *yShift = y;
 			}
 		}
-		else if(ball->movingNW()){
+		else if(movingNW()){
 			retVal = Y_AXIS;
-			*yShift = y;
+			if(yShift != NULL) *yShift = y;
 		}
-		else if(ball->movingSE()){
+		else if(movingSE()){
 			retVal = X_AXIS;
-			*xShift = x;
+			if(xShift != NULL) *xShift = x;
 		}
 		else{
 			printf("Level: Something wrong in SE\n");
 		}
-
-		delete blockRect;
 		
 	}
 	else if(hitNW != -1){
-		blocks[hitNW]->reduceCount();
-
-		blockRect = blocks[hitNW]->getRect();
-		int x = ballRect->getWOverlap(blockRect);
-		int y = ballRect->getNOverlap(blockRect);
+		double x = getWOverlap(objects[hitNW]);
+		double y = getNOverlap(objects[hitNW]);
 		
-		if(ball->movingNW()){
+		if(movingNW()){
 			
 			if(x > y){	//impact on North side of ball
 				retVal = Y_AXIS;
-				*yShift = y;
+				if(yShift != NULL) *yShift = y;
 			}
 			else if(x < y){	//impact on West side of ball
 				retVal = X_AXIS;
-				*xShift = x;
+				if(xShift != NULL) *xShift = x;
 			}
 			else{
 				retVal = X_AXIS | Y_AXIS;
-				*xShift = x;
-				*yShift = y;
+				if(xShift != NULL) *xShift = x;
+				if(yShift != NULL) *yShift = y;
 			}
 		}
-		else if(ball->movingNE()){
+		else if(movingNE()){
 			retVal = Y_AXIS;
-			*yShift = y;
+			if(yShift != NULL) *yShift = y;
 		}
-		else if(ball->movingSW()){
+		else if(movingSW()){
 			retVal = X_AXIS;
-			*xShift = x;
+			if(xShift != NULL) *xShift = x;
 		}
 		else{
 			printf("Level: Something wrong in SE\n");
 		}
-
-		delete blockRect;
-
 	}
 	else retVal = 0;
+	
+	if(objCollidedWith != NULL){
+		i = 0;
 		
-	delete ballRect;
+		if(hitNE != -1){
+			objCollidedWith[i] = hitNE;
+			i++;
+		}
+		if(hitSE != -1){
+			objCollidedWith[i] = hitSE;
+			i++;
+		}
+		if(hitNW != -1){
+			objCollidedWith[i] = hitNW;
+			i++;
+		}
+		if(hitSW != -1){
+			objCollidedWith[i] = hitSW;
+			i++;
+		}
+		
+		if(numCollided != NULL) *numCollided = i;
+	}
 	return retVal;
 }
 

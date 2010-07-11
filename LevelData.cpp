@@ -1,7 +1,7 @@
-#include "Level.h"
+#include "LevelData.h"
 
 
-Level::Level(){
+LevelData::LevelData(){
 	levelData = NULL;
 	blocks = NULL;
 	levelSize = 0;
@@ -9,7 +9,7 @@ Level::Level(){
 	levelHeight = 0;
 }
 
-bool Level::open(char* filename){
+bool LevelData::open(char* filename){
 	FILE* file = fopen(filename, "r");
 	if(!file){
 		printf("Failed to open level %s\n", filename);
@@ -76,7 +76,7 @@ bool Level::open(char* filename){
 	
 	return true;
 }
-void Level::regenerateBlocks(int w, int h){
+void LevelData::regenerateBlocks(int w, int h){
 
 	int i;
 	for(i = 0; i < levelSize; i++){
@@ -90,17 +90,36 @@ void Level::regenerateBlocks(int w, int h){
 	
 	int shift = (w%blockWidth)/2;	//center the blocks in the window
 	
+	int countFront = 0;
+	int countEnd = levelSize;
+	
 	i = 0;
 	int j, type;
 	for(j = 0; j < levelHeight; j++){
 		for(i = 0; i < levelWidth; i++){
 			type = valueAt(i,j);
-			blocks[levelWidth*j+i] = new Block(type,shift +i*blockWidth, j*blockHeight, blockWidth, blockHeight);
-			blocks[levelWidth*j+i]->enableTexture();
+			
+			//sort hidden blocks onto the front of the stack
+			if(type == BLOCK_HIDDEN){
+				countEnd--;
+				blocks[countEnd] = new Block(type,shift +i*blockWidth, j*blockHeight, blockWidth, blockHeight);
+//				blocks[countEnd]->enableTexture();
+			}
+			else{
+				blocks[countFront] = new Block(type,shift +i*blockWidth, j*blockHeight, blockWidth, blockHeight);
+//				blocks[countFront]->enableTexture();
+				countFront++;
+			}
 		}
 	}
+	
+	numVisible =  countFront;
+	
 }
-void Level::render(){
+int LevelData::getNumVisible(){
+	return numVisible;
+}
+void LevelData::render(){
 	int i,j;
 	for(j = 0; j < levelHeight;j++){
 		for(i = 0; i < levelWidth;i++){
@@ -109,14 +128,30 @@ void Level::render(){
 		}
 	}
 }
-
-int* Level::getLayout(int* w, int* h){
-	if(w != NULL) *w = levelWidth;
-	if(h != NULL) *h = levelHeight;
+void LevelData::setBlockImpact(int* blocksHit, int numHit){
+	bool found = false;
+	int i, j;
+	for(i = 0; i < numHit; i++){
+		found = false;
+		for(j =i+1; j < numHit; j++){
+			if(blocksHit[i] == blocksHit[j]){
+				found = true;
+			}
+		}
+		
+		if(!found){
+			bool nowHidden = blocks[blocksHit[i]]->reduceType();
+			if(nowHidden){
+				numVisible--;
+				Block* temp = blocks[blocksHit[i]];
+				blocks[blocksHit[i]] = blocks[numVisible];
+				blocks[numVisible] = temp;
+			}
+		}
+	}
 	
-	return levelData;
 }
-int Level::valueAt(int x, int y){
+int LevelData::valueAt(int x, int y){
 	if(x >= levelWidth || y >= levelHeight){
 		printf("Level: Attempting to Read outside Level\n");
 		return -1;
@@ -125,7 +160,16 @@ int Level::valueAt(int x, int y){
 	return levelData[y*levelWidth+x];	//value of array at specified x and y positions
 }
 
-void Level::display(){
+
+Block** LevelData::getBlocks(int* size){
+//	if(size != NULL) *size = levelSize;
+	if(size != NULL) *size = numVisible;
+
+	return blocks;
+	
+}
+
+void LevelData::display(){
 	int i;
 	printf("\nWidth: %i\nHeight: %i\n", levelWidth, levelHeight);
 	for(i = 0; i < levelSize; i++){
@@ -134,7 +178,7 @@ void Level::display(){
 	}
 }
 
-Level::~Level(){
+LevelData::~LevelData(){
 	if(levelData != NULL) free(levelData);	
 	if(blocks != NULL){
 		int i;

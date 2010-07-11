@@ -19,6 +19,14 @@ double StaticObject::getW(){
 double StaticObject::getH(){
 	return h;
 }
+
+
+void StaticObject::shiftX(double xShift){
+	x += xShift;
+}
+void StaticObject::shiftY(double yShift){
+	y += yShift;
+}
 /*
 Rect* StaticObject::getRect(){
 	return new Rect(x,y,w,h);

@@ -2,7 +2,6 @@
 #define INCLUDED_STATICOBJECT_H
 
 #include <stdio.h>
-#include "Rect.h"
 
 class StaticObject{
 	
@@ -14,8 +13,11 @@ class StaticObject{
 		double getY();
 		double getW();
 		double getH();
-//		Rect* getRect();
 	
+	
+		void shiftX(double xShift);
+		void shiftY(double yShift);
+		
 	
 		bool contains(StaticObject* rect);
 		bool containsPoint(double px,double py);
@@ -33,8 +35,7 @@ class StaticObject{
 		double getSOverlap(StaticObject* rect);
 		double getEOverlap(StaticObject* rect);
 		double getWOverlap(StaticObject* rect);
-	
-		virtual void render() = 0;
+		
 		virtual ~StaticObject();
 };
 

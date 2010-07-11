@@ -5,21 +5,34 @@
 #include "SDL/SDL_opengl.h"
  
  #include "Log.h"
- #include "Window.h"
+ #include "GLWindow.h"
  #include "Timer.h"
- #include "Level.h"
+ #include "LevelData.h"
+ #include "LevelList.h"
  #include "Ball.h"
  #include "Texture.h"
+ #include "Paddle.h"
+ #include "GraphicFont.h"
+ #include "Menu.h"
  
  #define HORIZ_RES		800
  #define VERT_RES		600
  
-#define GAME_FPS			60
+ #define BOTTOM_BORDER	25
+ 
+#define GAME_FPS			40
 #define GAME_LOOP_EVENT	10
 
-#define PAST_X_EDGE		1
-#define PAST_Y_EDGE		2
+#define BORDER_WIDTH		50
 
+#define EDGE_LEFT			0
+#define EDGE_RIGHT		1
+#define EDGE_TOP			2
+#define EDGE_BOTTOM		3
+
+#define NUM_LIVES_INITIAL	4
+
+#define SCORE_PER_HIT		100
 
 #define NUM_TEXTURES		3
 #define TEXTURE_BALL		0
@@ -30,31 +43,62 @@
 #define TEXTURE_FILE_BLOCK		"Data/particle.bmp"
 #define TEXTURE_FILE_PADDLE	"Data/particle.bmp"
 
+
+#define NUM_MENUS			2
+#define MENU_HIDDEN			0
+#define MENU_MAIN				1
+#define MENU_SETTINGS			2
+#define MENU_SCORE_DISPLAY	3
+#define MENU_NAME_ENTER		4
+
  
 class Game{
 	private:
 		Log* log;
-		Window* win;
+		GLWindow* win;
 		SDL_TimerID gameloopTimer;
 		Timer* fpsMon;
 		bool running;
-		Level* currentLevel;
+		bool paused;
+		
+		Menu** menus;
+		int currentMenu;
+		
+		GraphicFont* font;
+		
+		LevelList* levelList;
+		LevelData* currentLevel;
 		Ball* currentBall;
+		Paddle* currentPaddle;
 		GLuint* textures;
 		
-		bool displayMenu;
+		StaticObject** edges;
+		
+		unsigned int score;
+		int lives;
+	
 		
 		void processKeyboardEvent(SDL_Event* event);
 		void processMouseEvent(SDL_Event* event);
 		static Uint32 addGameEvent(Uint32 interval, void* param);
-	
+		
+		void initializeNewGame();
+		
 		void processGameLogic();
 		void renderGame();
-	
-		void updateBlocks();
-	
-		bool loadTextures();
 		
+		void renderBorder();
+		void renderValues();
+		void updateBlocks();
+		bool loadTextures();
+		void loadMenus();
+		void pauseGame(bool status);
+		
+		void renderDarkScreen();
+		
+		StaticObject** getObjects(int* numObjects);
+		
+		void filterIndicies(int* indicies, int* num, int removeAbove);
 	
 	public:
 		Game();

@@ -13,11 +13,11 @@
 #define RESIZABLE			(Uint32)0
 #define STATIC			(Uint32)WINDOW_BEHAVIOR
 
-class Window{
+class GLWindow{
 	
 	public:
-		Window();
-		~Window();
+		GLWindow();
+		~GLWindow();
 		bool init(int width, int height, Uint32 params);
 		void toggleFullscreen();
 		bool isFullscreen();

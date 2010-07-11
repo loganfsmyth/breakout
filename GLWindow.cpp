@@ -1,15 +1,15 @@
-#include "Window.h"
+#include "GLWindow.h"
 
-Window::Window(){
+GLWindow::GLWindow(){
 	
 	
 }
-Window::~Window(){
+GLWindow::~GLWindow(){
 	
 	
 	
 }
-bool Window::init(int width, int height, Uint32 params){
+bool GLWindow::init(int width, int height, Uint32 params){
 	printf("Init window (%dx%d)\n", width, height);
 	
 	this->width = width;
@@ -41,8 +41,11 @@ bool Window::init(int width, int height, Uint32 params){
 	if((params & RENDER_TYPE) == RENDER_OPENGL) return initializeGL(width, height);
 	else return true;
 }
-bool Window::initializeGL(int width, int height){
+bool GLWindow::initializeGL(int width, int height){
 	glClearColor( 0, 0, 0, 0 );
+	glEnable(GL_BLEND);
+//	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_TEXTURE_2D);
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -56,22 +59,22 @@ bool Window::initializeGL(int width, int height){
 	else return true;
 	
 }
-void Window::setCaption(char* cap){
+void GLWindow::setCaption(char* cap){
 	SDL_WM_SetCaption(cap, NULL );
 }
-void Window::setIcon(char* filename){
+void GLWindow::setIcon(char* filename){
 	//technically only uses a surface, so file doesn't NEED to be a bmp
 	SDL_WM_SetIcon(SDL_LoadBMP(filename), NULL);	//windows icons must be 32x32 bmp files
 }
 
-bool Window::processWindowEvent(SDL_Event* event){
+bool GLWindow::processWindowEvent(SDL_Event* event){
 	init(event->resize.w, event->resize.h, params);
 	width = event->resize.w;
 	height = event->resize.h;
 	return true;
 }
 
-void Window::toggleFullscreen(){
+void GLWindow::toggleFullscreen(){
 	//this seems to make everything explode, probably a bad plan
 	//ends up setting the res to full screen res and then
 	//it can't come back to an old windowed res
@@ -84,28 +87,28 @@ void Window::toggleFullscreen(){
 		init(width, height, params);
 	}
 }
-bool Window::isFullscreen(){
+bool GLWindow::isFullscreen(){
 	if((params & FULLSCREEN) == FULLSCREEN) return true;
 	else return false;
 }
-void Window::showCursor(){
+void GLWindow::showCursor(){
 	SDL_ShowCursor(SDL_ENABLE);
 }
-void Window::hideCursor(){
+void GLWindow::hideCursor(){
 	SDL_ShowCursor(SDL_DISABLE);
 }
-void Window::captureMouse(){
+void GLWindow::captureMouse(){
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 }
-void Window::releaseMouse(){
+void GLWindow::releaseMouse(){
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
-void Window::centerMouse(){
+void GLWindow::centerMouse(){
 	SDL_WarpMouse(width/2, height/2);
 }
-int Window::getHeight(){
+int GLWindow::getHeight(){
 	return height;
 }
-int Window::getWidth(){
+int GLWindow::getWidth(){
 	return width;
 }
