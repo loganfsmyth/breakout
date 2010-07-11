@@ -6,9 +6,9 @@ See GraphicFont.h for information
 
 #include "GraphicFont.h"
 
-GraphicFont::GraphicFont(){
+GraphicFont::GraphicFont(int size, int type){
 	started = false;
-	fontSize = 24;
+	fontSize = size;
 }
 
 bool GraphicFont::init(){
@@ -16,7 +16,15 @@ bool GraphicFont::init(){
 	XFontStruct *fontInfo;
 	fontList = glGenLists( 96 );
 	dpy = XOpenDisplay( NULL );
-	fontInfo = XLoadQueryFont( dpy, "-adobe-helvetica-medium-r-normal--24-*-*-*-p-*-iso8859-1" );
+	char* fontStr = (char*)malloc(sizeof(char)*100);
+	sprintf(fontStr, "%s%i%s", "-adobe-helvetica-medium-r-normal--", fontSize, "-*-*-*-p-*-iso8859-1");
+	
+//	printf(fontStr);
+//	printf("\n");
+//	fontInfo = XLoadQueryFont( dpy, "-adobe-helvetica-medium-r-normal--24-*-*-*-p-*-iso8859-1" );
+	fontInfo = XLoadQueryFont( dpy, fontStr);
+	free(fontStr);
+
 	if ( fontInfo == NULL ){
 		fontInfo = XLoadQueryFont( dpy, "fixed" );
 		if ( fontInfo == NULL ){

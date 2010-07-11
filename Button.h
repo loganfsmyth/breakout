@@ -14,15 +14,13 @@
 #define BUTTON_TYPE_TEXT	1
 #define BUTTON_TYPE_IMAGE	2
 
-#define BUTTON_GLOW_CHANGE	0.01
+#define BUTTON_GLOW_CHANGE	0.004
 
 class Button: public GUIObject{
 	private:
 		char* text;
 		int type;
 		GraphicFont* font;
-		float glow, glowFactor;
-		Timer* timer;
 	public:
 		Button(double x, double y, double w, double h, int type, char* text = NULL);
 		void render();

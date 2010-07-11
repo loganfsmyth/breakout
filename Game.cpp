@@ -1,12 +1,18 @@
 #include "Game.h"
 
+int main(int argc, char** argv){
+	startProgram();
+	gameLoop();
+	endProgram();
+	
+}
 
-Game::Game(){
+
+void startProgram(){
 	bool stat;
 	
 	log = new Log("Game.log", LOG_OVERWRITE);
 	
-//	int error = SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO);	//SDL_EVERYTHING
 	int error = SDL_Init(SDL_INIT_EVERYTHING);
 	if(error < 0) log->printLine("Failed to Initialize SDL");
 	else log->printLine("Initialized SDL Successfully");
@@ -22,7 +28,7 @@ Game::Game(){
 	edges[EDGE_BOTTOM] = new StaticObject(0,VERT_RES-BOTTOM_BORDER,HORIZ_RES, BORDER_WIDTH);
 	edges[EDGE_RIGHT] = new StaticObject(HORIZ_RES,0,BORDER_WIDTH, VERT_RES);
 	
-	font = new GraphicFont();
+	font = new GraphicFont(20);
 	stat = font->init();
 	if(stat) log->printLine("Initialized Font Successfully");
 	else log->printLine("Failed to Initialize Font");
@@ -52,31 +58,46 @@ Game::Game(){
 	currentLevel = NULL;
 	currentBall = NULL;
 	currentPaddle = NULL;
-	
-	currentMenu = MENU_HIDDEN;
-	
-	initializeNewGame();
-	
-	
-	pauseGame(true);
-	currentMenu = MENU_MAIN;
+
+	resumeGame();
 }
-void Game::loadMenus(){
+void loadMenus(){
 	GLuint* tex = (GLuint*)malloc(sizeof(GLuint)*50);
 	glGenTextures(50, tex);
 	
-	menus = (Menu**)malloc(sizeof(Menu*)*NUM_MENUS);
+	menus = (GUIObject**)malloc(sizeof(GUIObject*)*NUM_MENUS);
+	int i;
+	for(i = 0; i < NUM_MENUS; i++) menus[i] = NULL;
+	
 	menus[MENU_HIDDEN] = new Menu(0,0.0,0.0,0.0,0.0);	//create simple empty menu
 	
-	menus[MENU_MAIN] = new Menu(1,350.0,150.0,100.0,300.0);
+	menus[MENU_MAIN] = new Menu(1,350.0,150.0,150.0,300.0);
+	menus[MENU_MAIN]->enableBorder();
 	
 	Button* bu = new Button(0.0,0.0,130.0,30.0, BUTTON_TYPE_TEXT, "New Game!");
+	bu->enableBorder();
+	bu->setCallback(&resumeGame);
+	
 	menus[MENU_MAIN]->addObject(bu);
 	
 	
 }
+void resumeGame(){
+	if(menus[MENU_COUNTDOWN] != NULL) delete menus[MENU_COUNTDOWN];
+	menus[MENU_COUNTDOWN] = new CountdownMenu(5000,350.0,150.0,150.0,300.0);
+	menus[MENU_COUNTDOWN]->setCallback(&startGame);
+	
+	initializeNewGame();
+	pauseGame(true);
+	currentMenu = MENU_COUNTDOWN;
+}
+void startGame(){
+	pauseGame(false);
+	currentMenu = MENU_HIDDEN;
+}
 
-void Game::initializeNewGame(){
+
+void initializeNewGame(){
 	
 	currentBall = new Ball(397.0,VERT_RES-BOTTOM_BORDER-50);
 	currentPaddle = new Paddle(330.0, VERT_RES-BOTTOM_BORDER-20, 200.0);
@@ -87,7 +108,7 @@ void Game::initializeNewGame(){
 	lives = NUM_LIVES_INITIAL;
 	
 }	
-bool Game::loadTextures(){
+bool loadTextures(){
 	bool retVal = true;
 	Texture* tex = new Texture();
 	retVal = retVal && tex->loadImage(TEXTURE_FILE_BALL, textures[TEXTURE_BALL]);
@@ -100,7 +121,7 @@ bool Game::loadTextures(){
 	delete tex;
 	return retVal;
 }
-bool Game::gameLoop(){
+bool gameLoop(){
 	
 	SDL_Event event;
 	running = true;
@@ -123,16 +144,15 @@ bool Game::gameLoop(){
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-//			case SDL_MOUSEMOTION:
+			case SDL_MOUSEMOTION:
 				processMouseEvent(&event);
 				break;
 			case SDL_USEREVENT:
-				
 				if(!paused) processGameLogic();
 				else menus[currentMenu]->update();
 				
-				
 				renderGame();
+				
 				break;
 			default:
 				break;
@@ -144,7 +164,7 @@ bool Game::gameLoop(){
 	return true;
 }
 
-void Game::processKeyboardEvent(SDL_Event* event){
+void processKeyboardEvent(SDL_Event* event){
 	if(event->type == SDL_KEYDOWN){
 		if(event->key.keysym.sym == SDLK_LEFT) currentPaddle->setMoveLeft(true);
 		else if(event->key.keysym.sym == SDLK_RIGHT) currentPaddle->setMoveRight(true);
@@ -161,7 +181,9 @@ void Game::processKeyboardEvent(SDL_Event* event){
 		printf("Game: Keyboard:: This shouldn't Happen\n");
 	}
 }
-void Game::processMouseEvent(SDL_Event* event){
+void processMouseEvent(SDL_Event* event){
+	menus[currentMenu]->processMouseEvent(event);
+	
 	
 	if(event->type == SDL_MOUSEBUTTONDOWN){
 		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(true);
@@ -172,26 +194,29 @@ void Game::processMouseEvent(SDL_Event* event){
 		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(false);
 		else if(event->button.button == SDL_BUTTON_RIGHT) currentPaddle->setMoveRight(false);
 	}
+	else if(event->type == SDL_MOUSEMOTION){
+		
+	}
 	else{
 		printf("Game: Mouse:: This shouldn't Happen\n");
 	}
 }
-void Game::pauseGame(bool status){
+void pauseGame(bool status){
 	if(status){
-		currentBall->pause();
-		currentPaddle->pause();
+		if(currentBall != NULL) currentBall->pause();
+		if(currentPaddle != NULL) currentPaddle->pause();
 		paused = true;
 		currentMenu = MENU_MAIN;
 	}
 	else{
-		currentBall->unpause();
-		currentPaddle->unpause();
+		if(currentBall != NULL) currentBall->unpause();
+		if(currentPaddle != NULL) currentPaddle->unpause();
 		paused = false;
 		currentMenu = MENU_HIDDEN;
 	}
 }
 
-void Game::processGameLogic(){
+void processGameLogic(){
 	
 	double xShiftBall = 0, yShiftBall = 0, xShiftPaddle = 0, yShiftPaddle = 0;
 	int numObjects = 0;
@@ -239,10 +264,13 @@ void Game::processGameLogic(){
 		
 	if(lives <= 0){
 		pauseGame(true);
-		currentMenu = MENU_SCORE_DISPLAY;
+//		currentMenu = MENU_SCORE_DISPLAY;
+		currentMenu = MENU_MAIN;
+		
+
 	}
 }
-void Game::filterIndicies(int* indices, int* num, int removeAbove){
+void filterIndicies(int* indices, int* num, int removeAbove){
 	int i, j;
 	int numNegatives = 0;
 	int numValues = 0;
@@ -268,7 +296,7 @@ void Game::filterIndicies(int* indices, int* num, int removeAbove){
 	
 	*num = numValues;
 }
-StaticObject** Game::getObjects(int* numObjects){
+StaticObject** getObjects(int* numObjects){
 	int numBlocks = 0;
 	StaticObject** blocks = NULL;
 	if(currentLevel != NULL){
@@ -300,7 +328,7 @@ StaticObject** Game::getObjects(int* numObjects){
 	return objects;
 }
 
-void Game::renderBorder(){
+void renderBorder(){
 	
 	glLoadIdentity();
 	glColor3f(0.5, 0.5, 0.5);
@@ -311,7 +339,7 @@ void Game::renderBorder(){
 	glEnd();
 	
 }
-void Game::renderValues(){
+void renderValues(){
 	glRasterPos2f(5.0, VERT_RES-4);
 	font->print("Score: %i", score);
 	
@@ -319,7 +347,7 @@ void Game::renderValues(){
 	font->print("Lives: %i", lives);
 	
 }
-void Game::renderGame(){
+void renderGame(){
 	
 	
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -336,7 +364,7 @@ void Game::renderGame(){
 	}
 	SDL_GL_SwapBuffers();
 }
-void Game::renderDarkScreen(){
+void renderDarkScreen(){
 	glLoadIdentity();
 	glColor4f(0.0, 0.0, 0.0, 0.4f);
 	
@@ -348,7 +376,7 @@ void Game::renderDarkScreen(){
 	glEnd();
 	
 }
-Uint32 Game::addGameEvent(Uint32 interval, void* param){
+Uint32 addGameEvent(Uint32 interval, void* param){
 	// Create a user event to call the game loop.
 	SDL_Event event;
 
@@ -364,7 +392,7 @@ Uint32 Game::addGameEvent(Uint32 interval, void* param){
 
 
 
-Game::~Game(){
+void endProgram(){
 	
 	if(currentLevel != NULL) delete currentLevel;
 	if(currentBall != NULL) delete currentBall;

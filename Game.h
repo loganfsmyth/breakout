@@ -14,6 +14,8 @@
  #include "Paddle.h"
  #include "GraphicFont.h"
  #include "Menu.h"
+ #include "Button.h"
+ #include "CountdownMenu.h"
  
  #define HORIZ_RES		800
  #define VERT_RES		600
@@ -44,66 +46,67 @@
 #define TEXTURE_FILE_PADDLE	"Data/particle.bmp"
 
 
-#define NUM_MENUS			2
+#define NUM_MENUS			6
 #define MENU_HIDDEN			0
 #define MENU_MAIN				1
 #define MENU_SETTINGS			2
 #define MENU_SCORE_DISPLAY	3
 #define MENU_NAME_ENTER		4
+#define MENU_COUNTDOWN		5
 
  
-class Game{
-	private:
-		Log* log;
-		GLWindow* win;
-		SDL_TimerID gameloopTimer;
-		Timer* fpsMon;
-		bool running;
-		bool paused;
-		
-		Menu** menus;
-		int currentMenu;
-		
-		GraphicFont* font;
-		
-		LevelList* levelList;
-		LevelData* currentLevel;
-		Ball* currentBall;
-		Paddle* currentPaddle;
-		GLuint* textures;
-		
-		StaticObject** edges;
-		
-		unsigned int score;
-		int lives;
-	
-		
-		void processKeyboardEvent(SDL_Event* event);
-		void processMouseEvent(SDL_Event* event);
-		static Uint32 addGameEvent(Uint32 interval, void* param);
-		
-		void initializeNewGame();
-		
-		void processGameLogic();
-		void renderGame();
-		
-		void renderBorder();
-		void renderValues();
-		void updateBlocks();
-		bool loadTextures();
-		void loadMenus();
-		void pauseGame(bool status);
-		
-		void renderDarkScreen();
-		
-		StaticObject** getObjects(int* numObjects);
-		
-		void filterIndicies(int* indicies, int* num, int removeAbove);
-	
-	public:
-		Game();
-		bool gameLoop();
-		~Game();
-};
+
+Log* log;
+GLWindow* win;
+SDL_TimerID gameloopTimer;
+Timer* fpsMon;
+bool running;
+bool paused;
+
+GUIObject** menus;
+int currentMenu;
+
+GraphicFont* font;
+
+LevelList* levelList;
+LevelData* currentLevel;
+Ball* currentBall;
+Paddle* currentPaddle;
+GLuint* textures;
+
+StaticObject** edges;
+
+unsigned int score;
+int lives;
+
+
+void processKeyboardEvent(SDL_Event* event);
+void processMouseEvent(SDL_Event* event);
+Uint32 addGameEvent(Uint32 interval, void* param);
+
+void resumeGame();
+void startGame();
+void initializeNewGame();
+
+void processGameLogic();
+void renderGame();
+
+void renderBorder();
+void renderValues();
+void updateBlocks();
+bool loadTextures();
+void loadMenus();
+void pauseGame(bool status);
+
+void renderDarkScreen();
+
+StaticObject** getObjects(int* numObjects);
+
+void filterIndicies(int* indicies, int* num, int removeAbove);
+
+void startProgram();
+bool gameLoop();
+void endProgram();
+
 
 #endif

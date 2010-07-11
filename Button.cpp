@@ -1,14 +1,7 @@
 #include "Button.h"
 
-char* text;
-GraphicFont* font;
-float glow;
-bool inFocus;
-
-
-Button::Button(double x, double y, double w, double h, int type, char* text):GUIObject(x,y,w,h){
-	timer = new Timer();
-	timer->start();
+Button::Button(double x, double y, double w, double h, int type, char* text):GUIObject(1,x,y,w,h){
+	
 	this->type = type;
 	
 	glowFactor = BUTTON_GLOW_CHANGE;
@@ -18,14 +11,13 @@ Button::Button(double x, double y, double w, double h, int type, char* text):GUI
 			printf("Button: No Text to print\n");
 		}
 		this->text = text;
-		font = new GraphicFont();
+		font = new GraphicFont(24);
 		font->init();
 	}
-	
-	setFocus(true);
-	
 }
 void Button::update(){
+	GUIObject::update();
+	
 	if(isFocused()){
 		int time = timer->getTime();
 		if(glow >= 1.0){
@@ -40,19 +32,27 @@ void Button::update(){
 	timer->start();
 }
 void Button::render(){
+	GUIObject::render();
+	
+	glLoadIdentity();
 	
 	if(isTextured()) bindTexture();
 	else unbindTexture();
 
-	glColor3f(1.0,1.0,1.0);
+	float multiplier = 1.0f;
+	if(isFocused()){
+		multiplier = glow;
+	}
+	
+	glColor4f(1.0,1.0,1.0, 0.5+0.5*multiplier);
 	
 	if(type == BUTTON_TYPE_TEXT){
 		font->positionFont(x,y);
 		font->print(text);
-//		font->print("%f", glow);
+//		font->print("%f", multiplier);
+		
 	}
 	else if(type == BUTTON_TYPE_IMAGE){
-		
 		glBegin(GL_QUADS);
 			glVertex2f(0,0);
 			if(isTextured()) glTexCoord2f(0.0,0.0);
@@ -64,31 +64,11 @@ void Button::render(){
 			if(isTextured()) glTexCoord2f(1.0,0.0);
 		glEnd();
 	}
-	glTranslatef(x,y,0);		
-	glBegin(GL_LINE_STRIP);
-		glVertex2f(0,0);
-		glVertex2f(0, h);
-		glVertex2f(w, h);
-		glVertex2f(w, 0);
-		glVertex2f(0,0);
-	glEnd();
 	
-
-	if(isFocused()){
-		glColor4f(0.0, 0.0, 0.0, 0.5*glow);
-	
-		glBegin(GL_QUADS);
-			glVertex2f(0, 0);
-			glVertex2f(0, h);
-			glVertex2f(w, h);
-			glVertex2f(w, 0);
-		glEnd();
-	}
-
 }
 
 Button::~Button(){
+	if(type == BUTTON_TYPE_TEXT) delete font;
 	
-	delete timer;
 }
 

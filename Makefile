@@ -1,7 +1,7 @@
 options =  -Wall -g -ggdb
 link = `sdl-config --libs` -lGLU -lSDL_image -lSDL_ttf
 
-OBJ_FILES = Main.o Timer.o GLWindow.o Texture.o Log.o Game.o LevelData.o Ball.o Block.o StaticObject.o DynamicObject.o TexturedObject.o Paddle.o Particle.o LevelList.o GraphicFont.o GUIObject.o Menu.o Button.o
+OBJ_FILES = Timer.o GLWindow.o Texture.o Log.o Game.o LevelData.o Ball.o Block.o StaticObject.o DynamicObject.o TexturedObject.o Paddle.o Particle.o LevelList.o GraphicFont.o GUIObject.o Menu.o Button.o CountdownMenu.o
 
 compile: ${OBJ_FILES}
 	g++ ${options} -o main ${OBJ_FILES} ${link}
@@ -9,8 +9,6 @@ run: compile
 	./main
 clean: 
 	rm -f ${OBJ_FILES}
-Main.o: Main.cpp Game.o
-	g++ ${options} -c Main.cpp
 Game.o: Game.cpp Game.h 
 	g++ ${options} -c Game.cpp	
 Timer.o: Timer.cpp Timer.h
@@ -47,5 +45,7 @@ GUIObject.o: GUIObject.cpp GUIObject.h
 	g++ ${options} -c GUIObject.cpp
 Menu.o: Menu.cpp Menu.h
 	g++ ${options} -c Menu.cpp
+CountdownMenu.o: CountdownMenu.cpp CountdownMenu.h
+	g++ ${options} -c CountdownMenu.cpp
 Button.o: Button.cpp Button.h
 	g++ ${options} -c Button.cpp
