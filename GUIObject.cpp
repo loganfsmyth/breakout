@@ -28,6 +28,16 @@ bool GUIObject::isActive(){
 }
 
 
+void GUIObject::setPaused(bool stat){
+	if(stat) timer->pause();
+	else timer->unpause();
+	
+	int i;
+	for(i = 0; i < curSize; i++){
+		objects[i]->setPaused(stat);
+	}
+	
+}
 void GUIObject::setCallback(void (*func)()){
 	callback = func;
 }
@@ -123,6 +133,7 @@ bool GUIObject::processKeyboardEvent(SDL_Event* event){
 void GUIObject::addObject(GUIObject* obj){
 	obj->shiftX(getX());
 	obj->shiftY(getY());
+	
 	
 	if(curSize == maxSize) return;
 	objects[curSize] = obj;

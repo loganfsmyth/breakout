@@ -10,7 +10,7 @@ GLWindow::~GLWindow(){
 	
 }
 bool GLWindow::init(int width, int height, Uint32 params){
-	printf("Init window (%dx%d)\n", width, height);
+//	printf("Init window (%dx%d)\n", width, height);
 	
 	this->width = width;
 	this->height = height;

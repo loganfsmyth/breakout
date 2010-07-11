@@ -16,7 +16,7 @@ bool Texture::loadImageSurface(char* filename){
 		return false;
 	}
 	else{
-		printf("Loaded texture from: %s\n", filename);
+//		printf("Loaded texture from: %s\n", filename);
 		width = surface->w;
 		height = surface->h;
 		loaded = true;

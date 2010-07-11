@@ -28,6 +28,8 @@ class GUIObject: public StaticObject, public TexturedObject{
 		bool isFocused();
 		bool isActive();
 	
+		void setPaused(bool stat);
+	
 		void enableBorder();
 		void setCallback(void (*func)());
 	

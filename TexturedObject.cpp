@@ -12,7 +12,7 @@ void TexturedObject::setTexture(GLuint newTex, double x, double y, double w, dou
 	tex = newTex;
 }
 void TexturedObject::bindTexture(){
-	glBindTexture(GL_TEXTURE_2D, tex);
+	if(textured) glBindTexture(GL_TEXTURE_2D, tex);
 }
 void TexturedObject::unbindTexture(){
 	glBindTexture(GL_TEXTURE_2D, 0);

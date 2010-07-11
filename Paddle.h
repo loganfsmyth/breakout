@@ -5,19 +5,22 @@
 #include "DynamicObject.h"
 #include "TexturedObject.h"
 
-#define PADDLE_MAX_VELOCITY	0.3
-#define PADDLE_ACCELERATION	0.0005
+#define PADDLE_MAX_VELOCITY	0.35
+#define PADDLE_ACCELERATION	0.0008
 
 #define PADDLE_HEIGHT			10.0
 
 class Paddle: public DynamicObject, public TexturedObject{
-	private:
+	protected:
 		bool moveLeft, moveRight;
 	public:
 		Paddle(double x, double y, double w);
 		void setMoveLeft(bool status);
 		void setMoveRight(bool status);
 		void render();
+		void move();
+		bool movingLeft();
+		bool movingRight();
 };
 
 #endif

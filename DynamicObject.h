@@ -37,10 +37,12 @@ class DynamicObject: public StaticObject{
 		void invertXVel();
 		void invertYVel();
 	
+		void incXVel(double vel);
+	
 		void pause();
 		void unpause();
 		
-		void move();
+		virtual void move();
 	
 		int checkForCollision(StaticObject** objects, int numObjects,double* xShift = NULL, double* yShift = NULL, int* objCollidedWith = NULL, int* numCollided = NULL);
 	

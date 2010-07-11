@@ -14,30 +14,62 @@ Block::Block(int type, int x, int y, int w, int h):StaticObject(x,y,w,h){
 	this->type = type;
 }
 
-void Block::render(){
+void Block::getColor(GLfloat* r, GLfloat* g, GLfloat* b){
 	if(type == BLOCK_HIDDEN) return;
+	*r = allColors[type][0];
+	*g = allColors[type][1];
+	*b = allColors[type][2];
 	
-	glLoadIdentity();
-	glColor3fv(allColors[type]);
-	glTranslatef(x,y, 0);
+}
+
+bool Block::hasFaded(){
+	return true;
 	
-	glBegin(GL_QUADS);
-		glVertex2f(0,0);
-		if(isTextured()) glTexCoord2f(0.4,0.4);
-		glVertex2f(0, h);
-		if(isTextured()) glTexCoord2f(0.4,0.6);
-		glVertex2f(w, h);
-		if(isTextured()) glTexCoord2f(0.6,0.6);
-		glVertex2f(w, 0);
-		if(isTextured()) glTexCoord2f(0.6,0.4);
-	glEnd();
+	if(type != BLOCK_HIDDEN) return false;
+	
+	bool faded = true;
+	int i;
+	for(i = 0; i < BLOCK_DISSOLVE_PARTICLES; i++){
+		if(!particles[i]->hasFaded()) faded = false;
+	}
+	return faded;
+}
+void Block::render(){
+	if(type == BLOCK_HIDDEN){
+		if(hasFaded()) return;
+		
+		int i;
+		for(i = 0; i < BLOCK_DISSOLVE_PARTICLES; i++){
+			particles[i]->render();
+		}
+	}
+	else{	
+		bindTexture();
+		
+		glLoadIdentity();
+		glColor3fv(allColors[type]);
+		glTranslatef(x-BLOCK_IMAGE_BORDER,y-BLOCK_IMAGE_BORDER, 0);
+		
+		glBegin(GL_QUADS);
+			if(isTextured()) glTexCoord2f(0.0,0.0);
+			glVertex2f(0,0);
+			if(isTextured()) glTexCoord2f(0.0,1.0);
+			glVertex2f(0, h+BLOCK_IMAGE_BORDER*2);
+			if(isTextured()) glTexCoord2f(1.0,1.0);
+			glVertex2f(w+BLOCK_IMAGE_BORDER*2, h+BLOCK_IMAGE_BORDER*2);
+			if(isTextured()) glTexCoord2f(1.0,0.0);
+			glVertex2f(w+BLOCK_IMAGE_BORDER*2, 0);
+		glEnd();
+			
+		unbindTexture();
+	}
 }
 int Block::getType(){
 	return type;
 }
 bool Block::reduceType(){
 	if(type == BLOCK_HIDDEN){
-		printf("BlocK: Reduce::This shouldn't happen\n");
+		printf("Block: Reduce::This shouldn't happen\n");
 		return false;
 	}
 	type--;

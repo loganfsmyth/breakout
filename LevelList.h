@@ -17,7 +17,9 @@ class LevelList{
 	public:
 		LevelList();
 		bool init();
-		LevelData* getNext();
+		LevelData* getLevel();
+		void nextLevel();
+		void restartLevels();
 		int getNumLevels();
 		~LevelList();
 };

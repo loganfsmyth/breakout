@@ -11,6 +11,8 @@ DynamicObject::DynamicObject(double x, double y, double w, double h, double xVel
 	timer = new Timer();
 	bool stat = timer->init();
 	if(!stat) printf("Ball: Failed to Init TImer\n");
+		
+	timer->start();
 }
 
 void DynamicObject::invertXVel(){
@@ -24,6 +26,9 @@ void DynamicObject::pause(){
 }
 void DynamicObject::unpause(){
 	timer->start();
+}
+void DynamicObject::incXVel(double vel){
+	xVel += vel;
 }
 
 bool DynamicObject::movingNW(){
@@ -174,7 +179,7 @@ int DynamicObject::checkForCollision(StaticObject** objects, int numObjects,doub
 			if(xShift != NULL) *xShift = x;
 		}
 		else{
-			printf("Level: Something wrong in SE\n");
+//			printf("Level: Something wrong in SE\n");
 		}
 	}
 	else if(hitSW != -1){
@@ -207,7 +212,7 @@ int DynamicObject::checkForCollision(StaticObject** objects, int numObjects,doub
 			if(xShift != NULL) *xShift = x;
 		}
 		else{
-			printf("Level: Something wrong in SW\n");
+//			printf("Level: Something wrong in SW\n");
 		}
 	}
 	else if(hitNE != -1){
@@ -239,7 +244,7 @@ int DynamicObject::checkForCollision(StaticObject** objects, int numObjects,doub
 			if(xShift != NULL) *xShift = x;
 		}
 		else{
-			printf("Level: Something wrong in SE\n");
+//			printf("Level: Something wrong in SE\n");
 		}
 		
 	}
@@ -272,7 +277,7 @@ int DynamicObject::checkForCollision(StaticObject** objects, int numObjects,doub
 			if(xShift != NULL) *xShift = x;
 		}
 		else{
-			printf("Level: Something wrong in SE\n");
+//			printf("Level: Something wrong in SE\n");
 		}
 	}
 	else retVal = 0;

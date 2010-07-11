@@ -10,7 +10,7 @@ CountdownMenu::CountdownMenu(int time, double x, double y, double w, double h):G
 
 void CountdownMenu::render(){
 	glColor4f(1.0, 1.0, 1.0, 1.0);
-	font->positionFont(x,y);
+	font->positionFont(x+w/2-5,y+h/2);
 	font->print("%i", (target-(int)count)/1000);
 }
 void CountdownMenu::update(){

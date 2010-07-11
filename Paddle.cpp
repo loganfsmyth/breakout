@@ -4,74 +4,56 @@ Paddle::Paddle(double x, double y, double w):DynamicObject(x,y,w,PADDLE_HEIGHT, 
 	moveLeft = false;
 	moveRight = false;
 }
+void Paddle::move(){
+	if(moveLeft == moveRight){
+		xAcc = 0.0;
+		xVel = 0.0;
+	}
+	else if(moveLeft){
+		xAcc = -PADDLE_ACCELERATION;
+	}
+	else if(moveRight){
+		xAcc = PADDLE_ACCELERATION;
+	}
+	DynamicObject::move();
+}
+
 
 void Paddle::setMoveLeft(bool status){
-	if(moveLeft == status) return;
-	
-	if(status){
-		moveLeft = true;
-		if(moveRight){
-			xAcc = 0.0;
-			xVel = 0.0;
-		}
-		else{
-			xAcc = -PADDLE_ACCELERATION;
-		}
-	}
-	else{
-		moveLeft = false;
-		if(moveRight){
-			xAcc = PADDLE_ACCELERATION;
-		}
-		else{
-			xAcc = 0.0;
-			xVel = 0.0;
-		}
-	}
+	moveLeft = status;
 }
 void Paddle::setMoveRight(bool status){
-	if(moveRight == status) return;
-	
-	if(status){
-		moveRight = true;
-		if(moveLeft){
-			xAcc = 0.0;
-			xVel = 0.0;
-		}
-		else{
-			xAcc = PADDLE_ACCELERATION;
-		}
-	}
-	else{
-		moveRight = false;
-		if(moveLeft){
-			xAcc = -PADDLE_ACCELERATION;
-		}
-		else{
-			xAcc = 0.0;
-			xVel = 0.0;
-		}
-	}
-	
+	moveRight = status;
+}
+bool Paddle::movingRight(){
+	if(moveRight == moveLeft) return false;
+	return moveRight;
+}
+bool Paddle::movingLeft(){
+	if(moveRight == moveLeft) return false;
+	return moveLeft;
 }
 
 void Paddle::render(){
-//	printf("L: %i    R: %i\n", moveLeft, moveRight);
 	
 	glLoadIdentity();
 	glColor3f(0.9,0.1,0.1);
 	glTranslatef(x, y, 0);
 	
+	bindTexture();
+	
 	glBegin(GL_QUADS);
+		if(isTextured()) glTexCoord2f(0.0, 0.0);
 		glVertex2f(0,0);
-		if(isTextured()) glTexCoord2f(0.15, 0.15);
+		if(isTextured()) glTexCoord2f(0.0, 1.0);
 		glVertex2f(0, h);
-		if(isTextured()) glTexCoord2f(0.15, 0.85);
+		if(isTextured()) glTexCoord2f(1.0,1.0);
 		glVertex2f(w, h);
-		if(isTextured()) glTexCoord2f(0.85,0.85);
+		if(isTextured()) glTexCoord2f(1.0, 0.0);
 		glVertex2f(w, 0);
-		if(isTextured()) glTexCoord2f(0.85, 0.15);
 	glEnd();
+		
+	unbindTexture();
 }
 
 

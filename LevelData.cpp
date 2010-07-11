@@ -103,11 +103,9 @@ void LevelData::regenerateBlocks(int w, int h){
 			if(type == BLOCK_HIDDEN){
 				countEnd--;
 				blocks[countEnd] = new Block(type,shift +i*blockWidth, j*blockHeight, blockWidth, blockHeight);
-//				blocks[countEnd]->enableTexture();
 			}
 			else{
 				blocks[countFront] = new Block(type,shift +i*blockWidth, j*blockHeight, blockWidth, blockHeight);
-//				blocks[countFront]->enableTexture();
 				countFront++;
 			}
 		}
@@ -116,6 +114,13 @@ void LevelData::regenerateBlocks(int w, int h){
 	numVisible =  countFront;
 	
 }
+void LevelData::setTexture(GLuint tex, double x, double y, double w, double h){
+	int i;
+	for(i = 0; i < levelSize; i++){
+		blocks[i]->setTexture(tex, x, y,w, h);
+	}
+}
+
 int LevelData::getNumVisible(){
 	return numVisible;
 }

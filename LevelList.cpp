@@ -22,7 +22,7 @@ bool LevelList::init(){
 	}
 	rewind(file);
 	numLevels = count+1;
-	curLevel = -1;
+	curLevel = 0;
 	char* tempSpace = (char*)malloc(sizeof(char)*100);
 	levels = (char**)malloc(sizeof(char*)*numLevels);
 	
@@ -39,15 +39,19 @@ bool LevelList::init(){
 	started = true;
 	return true;
 }
-LevelData* LevelList::getNext(){
-	curLevel++;
-	
-	if(curLevel == numLevels) curLevel = 0;
-	
+LevelData* LevelList::getLevel(){
 	LevelData* lev = new LevelData();
 	lev->open(levels[curLevel]);
 	
 	return lev;
+}
+void LevelList::restartLevels(){
+	curLevel = 0;
+}
+void LevelList::nextLevel(){
+	curLevel++;
+	
+	if(curLevel == numLevels) curLevel = numLevels-1;
 }
 int LevelList::getNumLevels(){
 	return numLevels;

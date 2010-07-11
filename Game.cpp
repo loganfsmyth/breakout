@@ -1,5 +1,48 @@
 #include "Game.h"
 
+
+
+/*
+TODO:
+add particles after impacts
+add dissolve effect for blocks
+make menus decent
+alter speed of ball based on paddle speed
+potentially add items
+
+move "move" code into a separeate physics engine file and create abstract physics object for inheriting dynamic (for use by particles)
+make a particle effect object and have collisionEffect and dissolveeffect inherit from it
+
+can change block level code because if we begin to sort the blocks based on position(for easy collision calculations
+this will make it much faster to process collisions
+
+
+dissolveeffect
+    constructor takes x, y, w, h    maybe number of particles...probably not
+    
+collisionEffect
+   location is all it needs
+   
+particleeffect  
+   getParticles()
+   render()
+   
+   
+   at some point I'll have to start sorting the blocks for location in order to
+   make collision faster
+   
+   cannot simply compare every block with every ball/particle
+   will destroy performance
+   
+   already uses way too much processor power for a simple game
+
+
+should consider making polygon, square and circle objects that can calculate overlaps with eachother
+
+*/
+
+
+
 int main(int argc, char** argv){
 	startProgram();
 	gameLoop();
@@ -11,16 +54,16 @@ int main(int argc, char** argv){
 void startProgram(){
 	bool stat;
 	
-	log = new Log("Game.log", LOG_OVERWRITE);
+	gamelog = new Log("Game.log", LOG_OVERWRITE);
 	
 	int error = SDL_Init(SDL_INIT_EVERYTHING);
-	if(error < 0) log->printLine("Failed to Initialize SDL");
-	else log->printLine("Initialized SDL Successfully");
+	if(error < 0) gamelog->printLine("Failed to Initialize SDL");
+	else gamelog->printLine("Initialized SDL Successfully");
 	
 	win = new GLWindow();
 	stat = win->init(HORIZ_RES, VERT_RES, STATIC | RENDER_OPENGL);
-	if(stat) log->printLine("Initialized Window Successfully");
-	else log->printLine("Failed to Initialize Window");
+	if(stat) gamelog->printLine("Initialized Window Successfully");
+	else gamelog->printLine("Failed to Initialize Window");
 
 	edges = (StaticObject**)malloc(sizeof(StaticObject*)*4);
 	edges[EDGE_TOP] = new StaticObject(0,-BORDER_WIDTH,HORIZ_RES, BORDER_WIDTH);
@@ -30,28 +73,34 @@ void startProgram(){
 	
 	font = new GraphicFont(20);
 	stat = font->init();
-	if(stat) log->printLine("Initialized Font Successfully");
-	else log->printLine("Failed to Initialize Font");
+	if(stat) gamelog->printLine("Initialized Font Successfully");
+	else gamelog->printLine("Failed to Initialize Font");
 	
 	levelList = new LevelList();
 	stat = levelList->init();
-	if(stat) log->printLine("Initialized LevelList Successfully");
-	else log->printLine("Failed to Initialize LevelList");
+	if(stat) gamelog->printLine("Initialized LevelList Successfully");
+	else gamelog->printLine("Failed to Initialize LevelList");
 	
 	
 	fpsMon = new Timer();
 	stat = fpsMon->init();
-	if(stat) log->printLine("Initialized Timer Successfully");
-	else log->printLine("Failed to Initialize Timer");
+	if(stat) gamelog->printLine("Initialized Timer Successfully");
+	else gamelog->printLine("Failed to Initialize Timer");
 	
 	textures = (GLuint*)malloc(sizeof(GLuint)*NUM_TEXTURES);
 	glGenTextures(NUM_TEXTURES,textures);
 	
 	stat = loadTextures();
-	if(stat) log->printLine("Initialized Textures Successfully");
-	else log->printLine("Failed to Initialize Textures");
+	if(stat) gamelog->printLine("Initialized Textures Successfully");
+	else gamelog->printLine("Failed to Initialize Textures");
 	
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	collisions = (Collision**)malloc(sizeof(Collision*)*MAX_NUM_COLLISIONS);
+	int i;
+	for(i = 0; i < MAX_NUM_COLLISIONS; i++){
+		collisions[i] = NULL;
+	}
 	
 	loadMenus();
 	
@@ -59,7 +108,40 @@ void startProgram(){
 	currentBall = NULL;
 	currentPaddle = NULL;
 
+	switchMenu(MENU_MAIN);
+}
+void switchMenu(int type, int time, void (*func)()){
+	
+	if(type == MENU_COUNTDOWN){
+		if(currentMenu == MENU_COUNTDOWN){
+			if(func != NULL) (*func)();
+			return;
+		}
+		
+		if(menus[MENU_COUNTDOWN] != NULL) delete menus[MENU_COUNTDOWN];
+		menus[MENU_COUNTDOWN] = new CountdownMenu(time, 0, 0, HORIZ_RES,VERT_RES);
+		menus[MENU_COUNTDOWN]->setCallback(func);
+	}
+	
+	menus[currentMenu]->setPaused(true);
+	
+	if(type == MENU_HIDDEN) pauseGame(false);
+	else pauseGame(true);
+	
+	currentMenu = type;
+	menus[currentMenu]->setPaused(false);
+}
+
+void newGame(){
+	initializeNewGame();
 	resumeGame();
+}
+void resumeGame(){
+	if(lives <= 0) return;
+	switchMenu(MENU_COUNTDOWN, 5000, &startGame);
+}
+void startGame(){
+	switchMenu(MENU_HIDDEN);
 }
 void loadMenus(){
 	GLuint* tex = (GLuint*)malloc(sizeof(GLuint)*50);
@@ -71,42 +153,49 @@ void loadMenus(){
 	
 	menus[MENU_HIDDEN] = new Menu(0,0.0,0.0,0.0,0.0);	//create simple empty menu
 	
-	menus[MENU_MAIN] = new Menu(1,350.0,150.0,150.0,300.0);
+	menus[MENU_MAIN] = new Menu(6,350.0,150.0,150.0,300.0);
 	menus[MENU_MAIN]->enableBorder();
 	
-	Button* bu = new Button(0.0,0.0,130.0,30.0, BUTTON_TYPE_TEXT, "New Game!");
+	Button* bu = new Button(0.0,0.0,175.0,30.0, BUTTON_TYPE_TEXT, "Resume  Game!");
 	bu->enableBorder();
 	bu->setCallback(&resumeGame);
+	menus[MENU_MAIN]->addObject(bu);
+	
+	bu = new Button(0.0,100.0,130.0,30.0, BUTTON_TYPE_TEXT, "New Game!");
+	bu->enableBorder();
+	bu->setCallback(&newGame);
 	
 	menus[MENU_MAIN]->addObject(bu);
 	
 	
 }
-void resumeGame(){
-	if(menus[MENU_COUNTDOWN] != NULL) delete menus[MENU_COUNTDOWN];
-	menus[MENU_COUNTDOWN] = new CountdownMenu(5000,350.0,150.0,150.0,300.0);
-	menus[MENU_COUNTDOWN]->setCallback(&startGame);
+void initializeLevel(){
+	generateNewBall();
+	generateNewPaddle();
 	
-	initializeNewGame();
-	pauseGame(true);
-	currentMenu = MENU_COUNTDOWN;
-}
-void startGame(){
-	pauseGame(false);
-	currentMenu = MENU_HIDDEN;
-}
-
-
-void initializeNewGame(){
+	if(currentLevel != NULL) delete currentLevel;
+	currentLevel = levelList->getLevel();
 	
-	currentBall = new Ball(397.0,VERT_RES-BOTTOM_BORDER-50);
-	currentPaddle = new Paddle(330.0, VERT_RES-BOTTOM_BORDER-20, 200.0);
-	currentLevel = levelList->getNext();
 	currentLevel->regenerateBlocks(HORIZ_RES, VERT_RES-BOTTOM_BORDER);
+	currentLevel->setTexture(textures[TEXTURE_BLOCK], 0.0,0.0,1.0,1.0);
+}
+
+void generateNewBall(){
+	if(currentBall != NULL) delete currentBall;
+	currentBall = new Ball(397.0,VERT_RES-BOTTOM_BORDER-50);
+	currentBall->setTexture(textures[TEXTURE_BALL], 0.0, 0.0, 1.0, 1.0);
+}
+void generateNewPaddle(){
+	if(currentPaddle != NULL) delete currentPaddle;
+	currentPaddle = new Paddle(330.0, VERT_RES-BOTTOM_BORDER-20, 150.0);
+	currentPaddle->setTexture(textures[TEXTURE_PADDLE], 0.0, 0.0, 1.0, 1.0);
+}
+void initializeNewGame(){
+	levelList->restartLevels();
+	initializeLevel();
 	
 	score = 0;
 	lives = NUM_LIVES_INITIAL;
-	
 }	
 bool loadTextures(){
 	bool retVal = true;
@@ -118,6 +207,9 @@ bool loadTextures(){
 	delete tex;
 	tex = new Texture();
 	retVal = retVal && tex->loadImage(TEXTURE_FILE_PADDLE, textures[TEXTURE_PADDLE]);
+	delete tex;
+	tex = new Texture();
+	retVal = retVal && tex->loadImage(TEXTURE_FILE_PARTICLE, textures[TEXTURE_PARTICLE]);
 	delete tex;
 	return retVal;
 }
@@ -169,8 +261,9 @@ void processKeyboardEvent(SDL_Event* event){
 		if(event->key.keysym.sym == SDLK_LEFT) currentPaddle->setMoveLeft(true);
 		else if(event->key.keysym.sym == SDLK_RIGHT) currentPaddle->setMoveRight(true);
 		else if(event->key.keysym.sym == SDLK_RETURN){
-			if(paused) pauseGame(false);
-			else pauseGame(true);
+			if(paused) switchMenu(MENU_COUNTDOWN, 2000, &startGame);
+			else switchMenu(MENU_MAIN);
+			
 		}
 	}
 	else if(event->type == SDL_KEYUP){
@@ -186,13 +279,13 @@ void processMouseEvent(SDL_Event* event){
 	
 	
 	if(event->type == SDL_MOUSEBUTTONDOWN){
-		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(true);
-		else if(event->button.button == SDL_BUTTON_RIGHT) currentPaddle->setMoveRight(true);
+//		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(true);
+//		else if(event->button.button == SDL_BUTTON_RIGHT) currentPaddle->setMoveRight(true);
 		
 	}
 	else if(event->type == SDL_MOUSEBUTTONUP){
-		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(false);
-		else if(event->button.button == SDL_BUTTON_RIGHT) currentPaddle->setMoveRight(false);
+//		if(event->button.button == SDL_BUTTON_LEFT) currentPaddle->setMoveLeft(false);
+//		else if(event->button.button == SDL_BUTTON_RIGHT) currentPaddle->setMoveRight(false);
 	}
 	else if(event->type == SDL_MOUSEMOTION){
 		
@@ -206,13 +299,11 @@ void pauseGame(bool status){
 		if(currentBall != NULL) currentBall->pause();
 		if(currentPaddle != NULL) currentPaddle->pause();
 		paused = true;
-		currentMenu = MENU_MAIN;
 	}
 	else{
 		if(currentBall != NULL) currentBall->unpause();
 		if(currentPaddle != NULL) currentPaddle->unpause();
 		paused = false;
-		currentMenu = MENU_HIDDEN;
 	}
 }
 
@@ -221,28 +312,67 @@ void processGameLogic(){
 	double xShiftBall = 0, yShiftBall = 0, xShiftPaddle = 0, yShiftPaddle = 0;
 	int numObjects = 0;
 	int numHit = 0;
-	bool hitBottom = false;
+	bool hitBottom = false, hitPaddle = false;
 	int scoreIncrease = 0;
 	
 	StaticObject** objects = getObjects(&numObjects);
 	int* indicesHit = (int*)malloc(sizeof(int)*4);
+	int i;
+	for(i = 0; i < 4; i++) indicesHit[i] = -1;
 	
 	int collision = currentBall->checkForCollision(objects, numObjects, &xShiftBall, &yShiftBall, indicesHit, &numHit);
 	//only need to check 2 sides because left and right are first in the edges array
 	currentPaddle->checkForCollision(edges, 2, &xShiftPaddle, &yShiftPaddle);
-	int i;
+
 	for(i = 0; i < numHit; i++){
 		if(objects[indicesHit[i]] == edges[EDGE_BOTTOM]) hitBottom = true;
+		else if(objects[indicesHit[i]] == currentPaddle) hitPaddle = true;
 	}
 	
-	//filter values above the number of unhidden blocks
+	//filter out values above the number of visible blocks
 	//must filter because this array also contains the edges, paddle and ball
+	
 	filterIndicies(indicesHit, &numHit, currentLevel->getNumVisible()-1);
-	currentLevel->setBlockImpact(indicesHit, numHit);
+	
 	for(i = 0; i < numHit; i++){
-		if(indicesHit[i] != -1) scoreIncrease += SCORE_PER_HIT;
+		if(indicesHit[i] != -1){
+			scoreIncrease += SCORE_PER_HIT;
+
+			GLfloat r, g, b;
+			
+			Collision* added = addCollision(currentBall->getX()+currentBall->getW()/2, currentBall->getY()+currentBall->getH()/2);
+			((Block*)objects[indicesHit[i]])->getColor(&r, &g, &b);
+			
+			
+			added->setColor(r,g,b);
+		}
 	}
 	
+	for(i = 0; i < numCollisions;i++){
+		collisions[i]->processCollisions(objects, numObjects-1);
+	}
+	
+	currentLevel->setBlockImpact(indicesHit, numHit);
+	
+	double inc = 0.02;
+	
+	if(hitPaddle){
+		if(currentBall->movingSW() && currentPaddle->movingLeft()){
+			currentBall->incXVel(-1*inc);
+		}
+		else if(currentBall->movingSW() && currentPaddle->movingRight()){
+			currentBall->incXVel(inc);
+		}
+		else if(currentBall->movingSE() && currentPaddle->movingLeft()){
+			currentBall->incXVel(inc);
+		}
+		else if(currentBall->movingSE() && currentPaddle->movingRight()){
+			currentBall->incXVel(-1*inc);
+		}
+		
+		
+		
+	}
 	
 	if((collision & X_AXIS) == X_AXIS) currentBall->invertXVel();
 	if((collision & Y_AXIS) == Y_AXIS) currentBall->invertYVel();
@@ -254,22 +384,57 @@ void processGameLogic(){
 
 	currentBall->move();
 	currentPaddle->move();
+	for(i = 0; i < numCollisions; i++){
+		collisions[i]->move();
+	}
+	
 	
 	free(indicesHit);
 	free(objects);
 	
 	score += scoreIncrease;
 	
-	if(hitBottom) lives--;
-		
+	if(hitBottom){
+		lives--;
+		pauseGame(true);
+		generateNewBall();
+		generateNewPaddle();
+		switchMenu(MENU_COUNTDOWN, 2000, &startGame);
+	}
 	if(lives <= 0){
 		pauseGame(true);
 //		currentMenu = MENU_SCORE_DISPLAY;
-		currentMenu = MENU_MAIN;
-		
-
+		switchMenu(MENU_MAIN);
+	}
+	else if(currentLevel->getNumVisible() <= 0){
+		levelList->nextLevel();
+		initializeLevel();
+		pauseGame(true);
+		switchMenu(MENU_COUNTDOWN, 2000,startGame);
 	}
 }
+Collision* addCollision(double x, double y){
+	if(numCollisions >= MAX_NUM_COLLISIONS) return NULL;
+	
+	int i;	
+	for(i = 0; i < MAX_NUM_COLLISIONS; i++){
+		if(collisions[i] == NULL || collisions[i]->hasFaded()){
+			if(collisions[i] != NULL){
+				delete collisions[i];
+				collisions[i] = NULL;
+				numCollisions--;
+			}
+			collisions[i] = new Collision(x,y);
+			collisions[i]->setTexture(textures[TEXTURE_PARTICLE]);
+			
+			numCollisions++;
+			return collisions[i];
+		}
+	}
+	return NULL;
+}
+
+
 void filterIndicies(int* indices, int* num, int removeAbove){
 	int i, j;
 	int numNegatives = 0;
@@ -314,6 +479,9 @@ StaticObject** getObjects(int* numObjects){
 	objects[i+2] = edges[EDGE_TOP];
 	objects[i+3] = edges[EDGE_BOTTOM];
 	
+	//game is highly reliant on the paddle being the next object after the bottom edge, do not change
+	//will affect the waythat the ball reflects off of the paddle in processGameLogic
+	
 	(*numObjects) = numBlocks+4;
 	
 	if(currentPaddle != NULL){
@@ -348,16 +516,22 @@ void renderValues(){
 	
 }
 void renderGame(){
-	
-	
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
-	renderBorder();
-	renderValues();
-	currentLevel->render();
-	currentBall->render();
-	currentPaddle->render();
 	
+	if(currentLevel != NULL){
+//		glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+		int i;
+		for(i = 0; i < numCollisions; i++){
+			collisions[i]->render();
+		}
+		currentBall->render();
+//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		currentPaddle->render();
+		currentLevel->render();
+		renderBorder();
+		renderValues();
+	}
 	if(currentMenu != MENU_HIDDEN){
 		renderDarkScreen();
 		menus[currentMenu]->render();
@@ -399,6 +573,11 @@ void endProgram(){
 	if(currentPaddle != NULL) delete currentPaddle;
 	
 	
+	int i;
+	for(i = 0; i < numCollisions; i++){
+		delete collisions[i];
+	}
+	free(collisions);
 	delete edges[0];
 	delete edges[1];
 	delete edges[2];
@@ -415,6 +594,6 @@ void endProgram(){
 	delete levelList;
 	delete fpsMon;
 	delete win;
-	delete log;
+	delete gamelog;
 }
 

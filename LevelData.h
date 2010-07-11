@@ -24,6 +24,7 @@ class LevelData{
 		Block** getBlocks(int* size = NULL);
 		void setBlockImpact(int* blocksHit, int numHit);
 		int getNumVisible();
+		void setTexture(GLuint tex, double x, double y, double w, double h);
 		
 		~LevelData();
 	private:

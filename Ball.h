@@ -7,10 +7,11 @@
 #include "TexturedObject.h"
 
 
-#define BALL_BORDER	0	//border to account for transparent pixels in texture
-#define BALL_RADIUS	6
+#define BALL_BORDER	1	//border to account for transparent pixels in texture
+#define BALL_RADIUS	5
 
-#define BALL_START_VELOCITY	0.2
+#define BALL_START_VELOCITY	0.25
+//#define BALL_START_VELOCITY	0.05
 
 class Ball: public DynamicObject, public TexturedObject{
 	public:
